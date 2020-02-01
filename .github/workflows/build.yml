@@ -1,28 +1,21 @@
 name: TruffleRuby Dev Builds
-on: [push]
+on:
+  push:
+    tags:
+    - '*'
 jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Create tag
-      id: create_tag
-      run: |
-        tag=builds-$(date +%Y%m%d-%H%M%S)
-        git tag $tag 1d51c809302c8b39d2c292373c6beaa2bf9738c7
-        git push origin $tag
-        echo "::set-output name=tag::$tag"
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.create_tag.outputs.tag }}
-        release_name: ${{ steps.create_tag.outputs.tag }}
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
         prerelease: true
     - name: Create upload_url.txt file
       run: echo "${{ steps.create_release.outputs.upload_url }}" > upload_url.txt
