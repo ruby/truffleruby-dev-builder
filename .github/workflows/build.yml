@@ -1,0 +1,95 @@
+name: TruffleRuby Dev Builds
+on: [push]
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Create tag
+      id: create_tag
+      run: |
+        tag=builds-$(date +%Y%m%d-%H%M%S)
+        git tag $tag 1d51c809302c8b39d2c292373c6beaa2bf9738c7
+        git push origin $tag
+        echo "::set-output name=tag::$tag"
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.create_tag.outputs.tag }}
+        release_name: ${{ steps.create_tag.outputs.tag }}
+        prerelease: true
+    - name: Create upload_url.txt file
+      run: echo "${{ steps.create_release.outputs.upload_url }}" > upload_url.txt
+    - uses: actions/upload-artifact@v1
+      with:
+        name: upload_url
+        path: upload_url.txt
+
+  build:
+    needs: [release]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-16.04, ubuntu-18.04, macos-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/download-artifact@v1
+      with:
+        name: upload_url
+    - name: Set upload_url
+      id: release_info
+      run: |
+        upload_url=$(cat upload_url/upload_url.txt)
+        echo "::set-output name=upload_url::$upload_url"
+
+    - name: Setup system ruby
+      uses: eregon/use-ruby-action@master
+      with:
+        ruby-version: ruby-2.6
+    - run: echo "::set-env name=SDKROOT::$(xcrun --show-sdk-path)"
+      if: matrix.os == 'macos-latest'
+
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v2
+      with:
+        repository: oracle/truffleruby
+    - name: Install JVMCI
+      run: tool/jt.rb install jvmci
+    - name: Install mx
+      run: tool/jt.rb mx --version
+    - name: Clone Graal
+      uses: actions/checkout@v2
+      with:
+        repository: oracle/graal
+        path: graal
+        fetch-depth: 0
+    - run: mv graal ..
+    - run: tool/jt.rb mx sforceimports
+
+    - run: tool/jt.rb build --env native
+
+    - run: mkdir -p ~/.rubies
+    - run: mv $(tool/jt.rb mx --env native standalone-home ruby) ~/.rubies/truffleruby-head
+    - name: Create archive
+      run: tar czf truffleruby-head-${{ matrix.os }}.tar.gz -C ~/.rubies truffleruby-head
+
+    - name: Basic test
+      run: ~/.rubies/truffleruby-head/bin/ruby --version
+    - name: OpenSSL test
+      run: ~/.rubies/truffleruby-head/bin/ruby -ropen-uri -e 'puts open("https://rubygems.org/") { |f| f.read(1024) }'
+
+    - name: Upload Built Ruby
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.release_info.outputs.upload_url }}
+        asset_path: truffleruby-head-${{ matrix.os }}.tar.gz
+        asset_name: truffleruby-head-${{ matrix.os }}.tar.gz
+        asset_content_type: application/gzip
