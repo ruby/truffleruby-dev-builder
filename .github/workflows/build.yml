@@ -86,3 +86,19 @@ jobs:
         asset_path: truffleruby-head-${{ matrix.os }}.tar.gz
         asset_name: truffleruby-head-${{ matrix.os }}.tar.gz
         asset_content_type: application/gzip
+
+  metadata:
+    name: Update metadata about the last build
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: metadata
+        fetch-depth: 0
+    - run: |
+        echo $(basename ${{ github.ref }}) > latest_build.tag
+        git config user.name "GitHub Actions"
+        git config user.email automated@automated.org
+        git commit -a -m 'Update latest_build.tag'
+        git push
