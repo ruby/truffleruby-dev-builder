@@ -42,7 +42,7 @@ jobs:
         echo "::set-output name=upload_url::$upload_url"
 
     - name: Setup system ruby
-      uses: eregon/use-ruby-action@master
+      uses: ruby/setup-ruby@v1
       with:
         ruby-version: ruby-2.6
     - run: echo "::set-env name=SDKROOT::$(xcrun --show-sdk-path)"
