@@ -141,5 +141,5 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        n: 3
+        n: 10
         last_tag_file: latest_build.tag
