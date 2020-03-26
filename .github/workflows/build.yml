@@ -84,7 +84,7 @@ jobs:
         repository: oracle/truffleruby
         ref: ${{ steps.upload_info.outputs.commit }}
     - name: Install JVMCI
-      run: tool/jt.rb install jvmci
+      run: echo "::set-env name=JAVA_HOME::$(tool/jt.rb install jvmci)"
     - name: Install mx
       run: tool/jt.rb mx --version
     - name: Clone Graal
