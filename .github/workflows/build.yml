@@ -4,7 +4,7 @@ on:
     tags:
     - '*'
   schedule:
-  - cron: '0 19 * * *'
+  - cron: '0 17 * * *'
 jobs:
   release:
     name: Create GitHub Release
