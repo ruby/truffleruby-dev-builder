@@ -74,7 +74,7 @@ jobs:
     - name: Setup system ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: ruby-2.6
+        ruby-version: 2.6
     - run: echo "::set-env name=SDKROOT::$(xcrun --show-sdk-path)"
       if: matrix.os == 'macos-latest'
 
