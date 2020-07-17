@@ -14,15 +14,7 @@ jobs:
       with:
         fetch-depth: 0
       if: github.event_name == 'schedule'
-    - name: Create tag
-      id: create_tag
-      run: |
-        if [[ "${{ github.event_name }}" == "schedule" ]]; then
-          tag=builds-$(date +%Y%m%d-%H%M%S)
-        else
-          tag=$(basename "${{ github.ref }}")
-        fi
-        echo "::set-output name=tag::$tag"
+
     - name: Clone TruffleRuby
       uses: actions/checkout@v2
       with:
@@ -32,6 +24,32 @@ jobs:
       id: latest_commit
       working-directory: truffleruby
       run: echo "::set-output name=commit::$(git rev-parse HEAD)"
+
+    - name: Check the latest release commit
+      uses: actions/github-script@v2
+      id: check_commit
+      with:
+        script: |
+          const latestDevCommit = "${{ steps.latest_commit.outputs.commit }}"
+          const { owner, repo } = context.repo
+          let { data: release } = await github.repos.getLatestRelease({ owner, repo })
+          const latestReleaseCommit = release.body.split('@')[1]
+          console.log(`Latest Release commit: >${latestReleaseCommit}<`)
+          console.log(`Latest TruffleRuby commit: >${latestDevCommit}<`)
+          return (latestReleaseCommit === latestDevCommit) ? 'stop' : 'build'
+        result-encoding: string
+    - name: Should build?
+      run: test "${{ steps.check_commit.outputs.result }}" = "build"
+
+    - name: Create tag
+      id: create_tag
+      run: |
+        if [[ "${{ github.event_name }}" == "schedule" ]]; then
+          tag=builds-$(date +%Y%m%d-%H%M%S)
+        else
+          tag=$(basename "${{ github.ref }}")
+        fi
+        echo "::set-output name=tag::$tag"
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
