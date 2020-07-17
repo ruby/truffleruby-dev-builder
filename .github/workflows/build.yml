@@ -3,8 +3,8 @@ on:
   push:
     tags:
     - '*'
-  schedule:
-  - cron: '0 17 * * *'
+  schedule: # [10,15,19,23].map { |h| h-2 }.join(',')
+  - cron: '0 8,13,17,21 * * *'
 jobs:
   release:
     name: Create GitHub Release
