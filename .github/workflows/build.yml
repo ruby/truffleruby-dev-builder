@@ -41,8 +41,8 @@ jobs:
     - name: Should build?
       run: test "${{ steps.check_commit.outputs.result }}" = "build"
 
-    - name: Create tag
-      id: create_tag
+    - name: Set tag name
+      id: tag_name
       run: |
         if [[ "${{ github.event_name }}" == "schedule" ]]; then
           tag=builds-$(date +%Y%m%d-%H%M%S)
@@ -56,8 +56,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.create_tag.outputs.tag }}
-        release_name: ${{ steps.create_tag.outputs.tag }}
+        tag_name: ${{ steps.tag_name.outputs.tag }}
+        release_name: ${{ steps.tag_name.outputs.tag }}
         draft: true
         prerelease: false
         body: oracle/truffleruby@${{ steps.latest_commit.outputs.commit }}
