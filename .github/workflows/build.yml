@@ -34,8 +34,8 @@ jobs:
           const { owner, repo } = context.repo
           let { data: release } = await github.repos.getLatestRelease({ owner, repo })
           const latestReleaseCommit = release.body.split('@')[1]
-          console.log(`Latest Release commit: >${latestReleaseCommit}<`)
-          console.log(`Latest TruffleRuby commit: >${latestDevCommit}<`)
+          console.log(`Latest Release commit: ${latestReleaseCommit}`)
+          console.log(`Latest TruffleRuby commit: ${latestDevCommit}`)
           return (latestReleaseCommit === latestDevCommit) ? 'stop' : 'build'
         result-encoding: string
     - name: Should build?
