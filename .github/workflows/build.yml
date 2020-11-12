@@ -103,7 +103,7 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: 2.6
-    - run: echo "::set-env name=SDKROOT::$(xcrun --show-sdk-path)"
+    - run: echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
       if: matrix.os == 'macos-latest'
 
     - name: Clone TruffleRuby
@@ -114,7 +114,7 @@ jobs:
     - name: Install JVMCI
       run: |
         tool/jt.rb install jvmci
-        echo "::set-env name=JAVA_HOME::$(tool/jt.rb install jvmci)"
+        echo "JAVA_HOME=$(tool/jt.rb install jvmci)" >> $GITHUB_ENV
     - name: Install mx
       run: tool/jt.rb mx --version
     - name: Clone Graal
