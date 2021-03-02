@@ -126,8 +126,13 @@ jobs:
     - run: mv graal ..
     - run: tool/jt.rb mx sforceimports
 
+    # We build everything except native images first,
+    # so that we minimize the memory used by mx, etc when building native images.
+    - name: Build jars
+      run: tool/jt.rb build --env native --native-images=none
     - run: free -m
-    - run: tool/jt.rb build --env native
+    - name: Build native images
+      run: tool/jt.rb build --env native
 
     - run: mkdir -p ~/.rubies
     - run: mv $(tool/jt.rb mx --env native standalone-home ruby) ~/.rubies/truffleruby-head
