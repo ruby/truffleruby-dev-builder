@@ -126,6 +126,7 @@ jobs:
     - run: mv graal ..
     - run: tool/jt.rb mx sforceimports
 
+    - run: free -m
     - run: tool/jt.rb build --env native
 
     - run: mkdir -p ~/.rubies
