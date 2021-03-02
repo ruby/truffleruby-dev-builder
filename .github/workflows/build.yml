@@ -131,6 +131,7 @@ jobs:
     - name: Build jars
       run: tool/jt.rb build --env native --native-images=none
     - run: free -m
+      if: startsWith(matrix.os, 'ubuntu-')
     - name: Build native images
       run: tool/jt.rb build --env native
 
