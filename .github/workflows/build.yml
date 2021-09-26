@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-18.04, ubuntu-20.04, macos-latest ]
+        os: [ ubuntu-18.04, ubuntu-20.04, macos-10.15 ]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/download-artifact@v1
@@ -98,13 +98,19 @@ jobs:
       run: |
         echo "::set-output name=commit::$(cat info/commit)"
         echo "::set-output name=upload_url::$(cat info/upload_url)"
+    - name: Set platform
+      id: platform
+      run: |
+        platform=${{ matrix.os }}
+        platform=${platform/macos-*/macos-latest}
+        echo "::set-output name=platform::$platform"
 
     - name: Setup system ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: 2.6
     - run: echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
-      if: matrix.os == 'macos-latest'
+      if: startsWith(matrix.os, 'macos')
 
     - name: Clone TruffleRuby
       uses: actions/checkout@v2
@@ -138,7 +144,7 @@ jobs:
     - run: mkdir -p ~/.rubies
     - run: mv $(tool/jt.rb mx --env native standalone-home ruby) ~/.rubies/truffleruby-head
     - name: Create archive
-      run: tar czf truffleruby-head-${{ matrix.os }}.tar.gz -C ~/.rubies truffleruby-head
+      run: tar czf truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz -C ~/.rubies truffleruby-head
 
     - name: Basic test
       run: ~/.rubies/truffleruby-head/bin/ruby --version
@@ -151,8 +157,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.upload_info.outputs.upload_url }}
-        asset_path: truffleruby-head-${{ matrix.os }}.tar.gz
-        asset_name: truffleruby-head-${{ matrix.os }}.tar.gz
+        asset_path: truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz
+        asset_name: truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz
         asset_content_type: application/gzip
 
   metadata:
