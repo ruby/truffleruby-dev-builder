@@ -149,7 +149,7 @@ jobs:
     - name: Basic test
       run: ~/.rubies/truffleruby-head/bin/ruby --version
     - name: OpenSSL test
-      run: ~/.rubies/truffleruby-head/bin/ruby -ropen-uri -e 'puts open("https://rubygems.org/") { |f| f.read(1024) }'
+      run: ~/.rubies/truffleruby-head/bin/ruby -ropen-uri -e 'puts URI.send(:open, %{https://rubygems.org/}) { |f| f.read(1024) }'
 
     - name: Upload Built Ruby
       uses: actions/upload-release-asset@v1
