@@ -6,9 +6,12 @@ on:
   schedule:
   - cron: '0 8 * * *'
 jobs:
-  release:
-    name: Create GitHub Release
+  prepare:
+    name: Check if the latest truffleruby commit is already built
     runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check_commit.outputs.result }}
+      commit: ${{ steps.latest_commit.outputs.commit }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -25,7 +28,7 @@ jobs:
       working-directory: truffleruby
       run: echo "::set-output name=commit::$(git rev-parse HEAD)"
 
-    - name: Cancel if latest commit already built
+    - name: Check if latest commit already built
       uses: actions/github-script@v2
       id: check_commit
       with:
@@ -37,19 +40,25 @@ jobs:
           console.log(`Latest Release commit: ${latestReleaseCommit}`)
           console.log(`Latest TruffleRuby commit: ${latestDevCommit}`)
           if (latestReleaseCommit === latestDevCommit) {
-            console.log('Cancelling ...');
-            const run_id = "${{ github.run_id }}";
-            await github.actions.cancelWorkflowRun({ owner, repo, run_id });
-            return 'stop'
+            return 'false'
           } else {
-            return 'build'
+            return 'true'
           }
         result-encoding: string
-    - name: Waiting for cancellation
-      run: sleep 60
-      if: steps.check_commit.outputs.result == 'stop'
-    - name: Should build?
-      run: test "${{ steps.check_commit.outputs.result }}" = "build"
+
+  release:
+    name: Create GitHub Release
+    needs: [prepare]
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+      if: github.event_name == 'schedule'
 
     - name: Set tag name
       id: tag_name
@@ -70,34 +79,16 @@ jobs:
         release_name: ${{ steps.tag_name.outputs.tag }}
         draft: true
         prerelease: false
-        body: oracle/truffleruby@${{ steps.latest_commit.outputs.commit }}
-    - name: Create artifact files
-      run: |
-        mkdir info
-        echo "${{ steps.latest_commit.outputs.commit }}" > info/commit
-        echo "${{ steps.create_release.outputs.id }}" > info/release_id
-        echo "${{ steps.create_release.outputs.upload_url }}" > info/upload_url
-    - uses: actions/upload-artifact@v1
-      with:
-        name: info
-        path: info
+        body: oracle/truffleruby@${{ needs.prepare.outputs.commit }}
 
   build:
-    needs: [release]
+    needs: [prepare, release]
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-18.04, ubuntu-20.04, macos-10.15 ]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/download-artifact@v1
-      with:
-        name: info
-    - name: Set upload_info
-      id: upload_info
-      run: |
-        echo "::set-output name=commit::$(cat info/commit)"
-        echo "::set-output name=upload_url::$(cat info/upload_url)"
     - name: Set platform
       id: platform
       run: |
@@ -120,7 +111,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: oracle/truffleruby
-        ref: ${{ steps.upload_info.outputs.commit }}
+        ref: ${{ needs.prepare.outputs.commit }}
     - name: Install JVMCI
       run: |
         tool/jt.rb install jvmci
@@ -160,29 +151,21 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.upload_info.outputs.upload_url }}
+        upload_url: ${{ needs.release.outputs.upload_url }}
         asset_path: truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz
         asset_name: truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz
         asset_content_type: application/gzip
 
-  metadata:
+  publish:
     name: Publish Release
-    needs: [build]
+    needs: [release, build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v1
-      with:
-        name: info
-    - name: Set publish_info
-      id: publish_info
-      run: |
-        release_id=$(cat info/release_id)
-        echo "::set-output name=release_id::$release_id"
     - uses: eregon/publish-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        release_id: ${{ steps.publish_info.outputs.release_id }}
+        release_id: ${{ needs.release.outputs.release_id }}
     - uses: eregon/keep-last-n-releases@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
