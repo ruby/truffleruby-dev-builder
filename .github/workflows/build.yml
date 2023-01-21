@@ -26,7 +26,7 @@ jobs:
     - name: Set latest_commit
       id: latest_commit
       working-directory: truffleruby
-      run: echo "::set-output name=commit::$(git rev-parse HEAD)"
+      run: echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
     - name: Check if latest commit already built
       uses: actions/github-script@v2
@@ -68,7 +68,7 @@ jobs:
         else
           tag=$(basename "${{ github.ref }}")
         fi
-        echo "::set-output name=tag::$tag"
+        echo "tag=$tag" >> $GITHUB_OUTPUT
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -94,7 +94,7 @@ jobs:
       run: |
         platform=${{ matrix.os }}
         platform=${platform/macos-*/macos-latest}
-        echo "::set-output name=platform::$platform"
+        echo "platform=$platform" >> $GITHUB_OUTPUT
 
     - name: Setup system ruby
       uses: ruby/setup-ruby@v1
