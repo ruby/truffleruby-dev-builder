@@ -71,16 +71,16 @@ jobs:
         fi
         echo "tag=$tag" >> $GITHUB_OUTPUT
     - name: Create Release
+      uses: actions/github-script@v6
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.tag_name.outputs.tag }}
-        release_name: ${{ steps.tag_name.outputs.tag }}
-        draft: true
-        prerelease: false
-        body: oracle/truffleruby@${{ needs.prepare.outputs.commit }}
+        script: |
+          const { owner, repo } = context.repo
+          const tag = "${{ steps.tag_name.outputs.tag }}"
+          const body = "oracle/truffleruby@${{ needs.prepare.outputs.commit }}"
+          return await github.rest.repos.createRelease({
+            owner, repo, tag_name: tag, name: tag, body,
+            draft: true, prerelease: false, target_commitish: context.sha })
 
   build:
     needs: [prepare, release]
