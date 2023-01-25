@@ -14,13 +14,13 @@ jobs:
       should_build: ${{ steps.check_commit.outputs.result }}
       commit: ${{ steps.latest_commit.outputs.commit }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
       if: github.event_name != 'push'
 
     - name: Clone TruffleRuby
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: oracle/truffleruby
         path: truffleruby
@@ -30,13 +30,13 @@ jobs:
       run: echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
     - name: Check if latest commit already built
-      uses: actions/github-script@v2
+      uses: actions/github-script@v6
       id: check_commit
       with:
         script: |
           const latestDevCommit = "${{ steps.latest_commit.outputs.commit }}"
           const { owner, repo } = context.repo
-          let { data: release } = await github.repos.getLatestRelease({ owner, repo })
+          let { data: release } = await github.rest.repos.getLatestRelease({ owner, repo })
           const latestReleaseCommit = release.body.split('@')[1]
           console.log(`Latest Release commit: ${latestReleaseCommit}`)
           console.log(`Latest TruffleRuby commit: ${latestDevCommit}`)
@@ -56,7 +56,7 @@ jobs:
       release_id: ${{ steps.create_release.outputs.id }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
       if: github.event_name != 'push'
@@ -109,7 +109,7 @@ jobs:
       if: startsWith(matrix.os, 'macos')
 
     - name: Clone TruffleRuby
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: oracle/truffleruby
         ref: ${{ needs.prepare.outputs.commit }}
@@ -120,7 +120,7 @@ jobs:
     - name: Install mx
       run: tool/jt.rb mx --version
     - name: Clone Graal
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: oracle/graal
         path: graal
