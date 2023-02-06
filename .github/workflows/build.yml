@@ -53,8 +53,8 @@ jobs:
     if: needs.prepare.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.result.id }}
+      upload_url: ${{ steps.create_release.outputs.result.upload_url }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -78,9 +78,10 @@ jobs:
           const { owner, repo } = context.repo
           const tag = "${{ steps.tag_name.outputs.tag }}"
           const body = "oracle/truffleruby@${{ needs.prepare.outputs.commit }}"
-          return await github.rest.repos.createRelease({
+          const { data: json } = await github.rest.repos.createRelease({
             owner, repo, tag_name: tag, name: tag, body,
             draft: true, prerelease: false, target_commitish: context.sha })
+          return json
 
   build:
     needs: [prepare, release]
