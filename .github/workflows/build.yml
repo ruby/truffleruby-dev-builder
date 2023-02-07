@@ -53,8 +53,8 @@ jobs:
     if: needs.prepare.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     outputs:
-      release_id: ${{ fromJSON(steps.create_release.outputs.result).id }}
-      upload_url: ${{ fromJSON(steps.create_release.outputs.result).upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -71,17 +71,13 @@ jobs:
         fi
         echo "tag=$tag" >> $GITHUB_OUTPUT
     - name: Create Release
-      uses: actions/github-script@v6
+      uses: softprops/action-gh-release@v1
       id: create_release
       with:
-        script: |
-          const { owner, repo } = context.repo
-          const tag = "${{ steps.tag_name.outputs.tag }}"
-          const body = "oracle/truffleruby@${{ needs.prepare.outputs.commit }}"
-          const { data: json } = await github.rest.repos.createRelease({
-            owner, repo, tag_name: tag, name: tag, body,
-            draft: true, prerelease: false, target_commitish: context.sha })
-          return json
+        tag_name: ${{ steps.tag_name.outputs.tag }}
+        draft: true
+        prerelease: false
+        body: oracle/truffleruby@${{ needs.prepare.outputs.commit }}
 
   build:
     needs: [prepare, release]
@@ -149,14 +145,10 @@ jobs:
       run: ~/.rubies/truffleruby-head/bin/ruby -ropen-uri -e 'puts URI.send(:open, %{https://rubygems.org/}) { |f| f.read(1024) }'
 
     - name: Upload Built Ruby
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
         upload_url: ${{ needs.release.outputs.upload_url }}
-        asset_path: truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz
-        asset_name: truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz
-        asset_content_type: application/gzip
+        files: truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz
 
   publish:
     name: Publish Release
