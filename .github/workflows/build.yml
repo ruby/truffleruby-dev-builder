@@ -14,11 +14,6 @@ jobs:
       should_build: ${{ steps.check_commit.outputs.result }}
       commit: ${{ steps.latest_commit.outputs.commit }}
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-      if: github.event_name != 'push'
-
     - name: Clone TruffleRuby
       uses: actions/checkout@v3
       with:
