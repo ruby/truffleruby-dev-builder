@@ -67,6 +67,7 @@ jobs:
     - name: Create Release
       env:
         GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
       run: |
         tag="${{ steps.tag.outputs.tag }}"
         body="oracle/truffleruby@${{ needs.prepare.outputs.commit }}"
@@ -140,6 +141,7 @@ jobs:
     - name: Upload Built Ruby
       env:
         GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
       run: gh release upload "${{ needs.release.outputs.tag }}" "truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz"
 
   publish:
@@ -150,6 +152,7 @@ jobs:
     - name: Publish Release
       env:
         GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
       run: gh release edit "${{ needs.release.outputs.tag }}" --draft=false
     - uses: eregon/keep-last-n-releases@v1
       env:
