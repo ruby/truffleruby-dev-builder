@@ -53,8 +53,7 @@ jobs:
     if: needs.prepare.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
-      tag_name: ${{ steps.tag_name.outputs.tag }}
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -62,7 +61,7 @@ jobs:
       if: github.event_name != 'push'
 
     - name: Set tag name
-      id: tag_name
+      id: tag
       run: |
         if [[ "${{ github.event_name }}" != "push" ]]; then
           tag=v$(date +%Y%m%d.%H%M%S)
@@ -71,13 +70,12 @@ jobs:
         fi
         echo "tag=$tag" >> $GITHUB_OUTPUT
     - name: Create Release
-      uses: softprops/action-gh-release@v1
-      id: create_release
-      with:
-        tag_name: ${{ steps.tag_name.outputs.tag }}
-        draft: true
-        prerelease: false
-        body: oracle/truffleruby@${{ needs.prepare.outputs.commit }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        tag="${{ steps.tag.outputs.tag }}"
+        body="oracle/truffleruby@${{ needs.prepare.outputs.commit }}"
+        gh release create --draft "$tag" --title "$tag" --notes "$body"
 
   build:
     needs: [prepare, release]
@@ -145,21 +143,19 @@ jobs:
       run: ~/.rubies/truffleruby-head/bin/ruby -ropen-uri -e 'puts URI.send(:open, %{https://rubygems.org/}) { |f| f.read(1024) }'
 
     - name: Upload Built Ruby
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ needs.release.outputs.tag_name }}
-        files: truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release upload "${{ needs.release.outputs.tag }}" "truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz"
 
   publish:
     name: Publish Release
     needs: [release, build]
     runs-on: ubuntu-latest
     steps:
-    - uses: eregon/publish-release@v1
+    - name: Publish Release
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        release_id: ${{ needs.release.outputs.release_id }}
+        GH_TOKEN: ${{ github.token }}
+      run: gh release edit "${{ needs.release.outputs.tag }}" --draft=false
     - uses: eregon/keep-last-n-releases@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
