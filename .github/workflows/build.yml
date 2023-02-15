@@ -4,8 +4,8 @@ on:
   push:
     tags:
     - '*'
-  schedule:
-  - cron: '0 8 * * *'
+  # schedule:
+  # - cron: '0 8 * * *' # temporarily disable until the fix of https://bugs.openjdk.org/browse/JDK-8302160 is used
 jobs:
   prepare:
     name: Check if the latest truffleruby commit is already built
