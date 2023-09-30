@@ -14,7 +14,7 @@ jobs:
       should_build: ${{ steps.check_commit.outputs.result }}
       commit: ${{ steps.latest_commit.outputs.commit }}
     steps:
-    - name: Clone TruffleRuby
+    - name: Clone truffleruby
       uses: actions/checkout@v3
       with:
         repository: oracle/truffleruby
@@ -33,8 +33,8 @@ jobs:
           const { owner, repo } = context.repo
           let { data: release } = await github.rest.repos.getLatestRelease({ owner, repo })
           const latestReleaseCommit = release.body.split('@')[1]
-          console.log(`Latest Release commit: ${latestReleaseCommit}`)
-          console.log(`Latest TruffleRuby commit: ${latestDevCommit}`)
+          console.log(`Latest release commit: ${latestReleaseCommit}`)
+          console.log(`Latest truffleruby commit: ${latestDevCommit}`)
           if (latestReleaseCommit === latestDevCommit) {
             return 'false'
           } else {
@@ -81,6 +81,12 @@ jobs:
         os: [ ubuntu-20.04, ubuntu-22.04, macos-11 ]
     runs-on: ${{ matrix.os }}
     steps:
+    - name: Clone truffleruby
+      uses: actions/checkout@v3
+      with:
+        repository: oracle/truffleruby
+        ref: ${{ needs.prepare.outputs.commit }}
+
     - name: Set platform
       id: platform
       run: |
@@ -88,6 +94,7 @@ jobs:
         platform=${platform/macos-*/macos-latest}
         echo "platform=$platform" >> $GITHUB_OUTPUT
 
+    # Build
     - name: Setup system ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -99,11 +106,6 @@ jobs:
     - run: echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
       if: startsWith(matrix.os, 'macos')
 
-    - name: Clone TruffleRuby
-      uses: actions/checkout@v3
-      with:
-        repository: oracle/truffleruby
-        ref: ${{ needs.prepare.outputs.commit }}
     - name: Install JVMCI
       run: |
         tool/jt.rb install jvmci
