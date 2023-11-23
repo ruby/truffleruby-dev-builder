@@ -99,7 +99,7 @@ jobs:
     - name: Setup system ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.6
+        ruby-version: 3.2
     - name: Setup system python
       uses: actions/setup-python@v3
       with:
@@ -107,28 +107,24 @@ jobs:
     - run: echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
       if: startsWith(matrix.os, 'macos')
 
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+    - name: Clone Graal
+      run: jt sforceimports
     - name: Install JVMCI
       run: |
-        tool/jt.rb install jvmci
-        echo "JAVA_HOME=$(tool/jt.rb install jvmci)" >> $GITHUB_ENV
+        jt install jvmci
+        echo "JAVA_HOME=$(jt install jvmci)" >> $GITHUB_ENV
     - name: Install mx
-      run: tool/jt.rb mx --version
-    - name: Clone Graal
-      uses: actions/checkout@v3
-      with:
-        repository: oracle/graal
-        path: graal
-        fetch-depth: 0
-    - run: mv graal ..
-    - run: tool/jt.rb mx sforceimports
+      run: jt mx --version
 
     - run: free -m
       if: startsWith(matrix.os, 'ubuntu-')
     - name: Build TruffleRuby
-      run: tool/jt.rb build --env native
+      run: jt build --env native
 
     - run: mkdir -p ~/.rubies
-    - run: mv $(tool/jt.rb mx --env native standalone-home ruby) ~/.rubies/truffleruby-head
+    - run: mv $(jt mx --env native standalone-home ruby) ~/.rubies/truffleruby-head
     - name: Create archive
       run: tar czf truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz -C ~/.rubies truffleruby-head
 
