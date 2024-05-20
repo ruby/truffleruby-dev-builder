@@ -97,7 +97,7 @@ jobs:
 
     # Build
     - name: Setup system ruby
-      uses: ruby/setup-ruby@v1
+      uses: ruby/setup-ruby@master
       with:
         ruby-version: 3.2
     - name: Setup system python
