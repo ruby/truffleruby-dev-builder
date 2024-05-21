@@ -79,6 +79,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, macos-11, macos-arm-oss ]
+        name: [ '-head', '+graalvm-head' ]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Clone truffleruby
@@ -122,24 +123,31 @@ jobs:
 
     - run: free -m
       if: startsWith(matrix.os, 'ubuntu')
-    - name: Build TruffleRuby
+    - name: Build TruffleRuby (native)
       run: jt build --env native
+      if: matrix.name == '-head'
+    - name: Build TruffleRuby (jvm)
+      run: jt build --env jvm-ce-libgraal
+      if: matrix.name == '+graalvm-head'
 
     - run: mkdir -p ~/.rubies
-    - run: mv $(jt mx --env native standalone-home ruby) ~/.rubies/truffleruby-head
+    - run: mv $(jt mx --env native standalone-home --type=native ruby) ~/.rubies/truffleruby${{ matrix.name }}
+      if: matrix.name == '-head'
+    - run: mv $(jt mx --env jvm-ce-libgraal standalone-home --type=jvm ruby) ~/.rubies/truffleruby${{ matrix.name }}
+      if: matrix.name == '+graalvm-head'
     - name: Create archive
-      run: tar czf truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz -C ~/.rubies truffleruby-head
+      run: tar czf truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz -C ~/.rubies truffleruby${{ matrix.name }}
 
     - name: Basic test
-      run: ~/.rubies/truffleruby-head/bin/ruby --version
+      run: ~/.rubies/truffleruby${{ matrix.name }}/bin/ruby --version
     - name: OpenSSL test
-      run: ~/.rubies/truffleruby-head/bin/ruby -ropen-uri -e 'puts URI.send(:open, %{https://rubygems.org/}) { |f| f.read(1024) }'
+      run: ~/.rubies/truffleruby${{ matrix.name }}/bin/ruby -ropen-uri -e 'puts URI.send(:open, %{https://rubygems.org/}) { |f| f.read(1024) }'
 
     - name: Upload Built Ruby
       env:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
-      run: gh release upload "${{ needs.release.outputs.tag }}" "truffleruby-head-${{ steps.platform.outputs.platform }}.tar.gz"
+      run: gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz"
 
   publish:
     name: Publish Release
