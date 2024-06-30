@@ -107,6 +107,9 @@ jobs:
         python-version: '3.10'
     - run: echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
       if: startsWith(matrix.os, 'macos')
+    # https://github.com/oracle/truffleruby/issues/3390
+    - run: echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
+      if: matrix.os == 'macos-12'
     - run: sudo apt-get install -y --no-install-recommends libyaml-dev
       if: startsWith(matrix.os, 'ubuntu')
 
