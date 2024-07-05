@@ -127,7 +127,7 @@ jobs:
     - run: free -m
       if: startsWith(matrix.os, 'ubuntu')
     - name: Build TruffleRuby (native)
-      run: jt build --env native
+      run: jt build --env native --extra-image-builder-argument=rubyvm:-J-XX:MaxRAMPercentage=100
       if: matrix.name == '-head'
     - name: Build TruffleRuby (jvm)
       run: jt build --env jvm-ce-libgraal
