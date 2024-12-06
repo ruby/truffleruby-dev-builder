@@ -78,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, macos-12, macos-14 ]
+        os: [ ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, macos-13, macos-14 ]
         name: [ '-head', '+graalvm-head' ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -92,7 +92,7 @@ jobs:
       id: platform
       run: |
         platform=${{ matrix.os }}
-        platform=${platform/macos-12/macos-latest}
+        platform=${platform/macos-13/macos-latest}
         platform=${platform/macos-14/macos-13-arm64}
         echo "platform=$platform" >> $GITHUB_OUTPUT
 
@@ -107,9 +107,6 @@ jobs:
         python-version: '3.10'
     - run: echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
       if: startsWith(matrix.os, 'macos')
-    # https://github.com/oracle/truffleruby/issues/3390
-    - run: echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
-      if: matrix.os == 'macos-12'
     - run: sudo apt-get install -y --no-install-recommends libyaml-dev
       if: startsWith(matrix.os, 'ubuntu')
 
