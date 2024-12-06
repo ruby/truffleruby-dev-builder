@@ -78,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        os: [ ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, macos-15, macos-latest ]
         name: [ '-head', '+graalvm-head' ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -92,7 +92,8 @@ jobs:
       id: platform
       run: |
         platform=${{ matrix.os }}
-        platform=${platform/macos-14/macos-13-arm64}
+        platform=${platform/macos-14/macos-14-arm64}
+        platform=${platform/macos-15/macos-15-arm64}
         echo "platform=$platform" >> $GITHUB_OUTPUT
 
     # Build
