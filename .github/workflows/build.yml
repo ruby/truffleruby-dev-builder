@@ -140,9 +140,9 @@ jobs:
       if: matrix.name == '+graalvm-ea'
 
     - run: mkdir -p ~/.rubies
-    - run: mv $(jt mx --env native standalone-home --type=native ruby) ~/.rubies/truffleruby${{ matrix.name }}
+    - run: mv $(jt -u native ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
       if: matrix.name == '-head'
-    - run: mv $(jt mx --env jvm-ce-libgraal standalone-home --type=jvm ruby) ~/.rubies/truffleruby${{ matrix.name }}
+    - run: mv $(jt -u jvm-ce-libgraal ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
       if: matrix.name == '+graalvm-head'
     - run: mv truffleruby-jvm-ea-master-build ~/.rubies/truffleruby${{ matrix.name }}
       if: matrix.name == '+graalvm-ea'
