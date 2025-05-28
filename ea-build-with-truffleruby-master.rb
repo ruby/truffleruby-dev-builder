@@ -75,7 +75,7 @@ EXPECTED_EXTRA_IN_EA_BUILD = %w[
 ]
 
 EXPECTED_EXTRA_IN_MASTER_BUILD = %w[
-  3rd_party_licenses_truffleruby.txt
+  3rd_party_licenses.txt
 ]
 
 # There might be more or less files in these directories, that's OK, these are "Ruby home" files
