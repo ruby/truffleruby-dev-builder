@@ -15,7 +15,7 @@ jobs:
       commit: ${{ steps.latest_commit.outputs.commit }}
     steps:
     - name: Clone truffleruby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: oracle/truffleruby
         path: truffleruby
@@ -50,7 +50,7 @@ jobs:
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
       if: github.event_name != 'push'
@@ -83,7 +83,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - name: Clone truffleruby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: oracle/truffleruby
         ref: ${{ needs.prepare.outputs.commit }}
