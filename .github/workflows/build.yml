@@ -103,7 +103,7 @@ jobs:
       with:
         ruby-version: 3.2
     - name: Setup system python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.10'
     - run: echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
