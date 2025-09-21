@@ -117,10 +117,10 @@ jobs:
     - run: sudo apt-get install -y --no-install-recommends libyaml-dev
       if: startsWith(matrix.os, 'ubuntu')
 
-    - name: Download Oracle GraalVM EA build
+    - name: Download Oracle GraalVM
       uses: graalvm/setup-graalvm@v1
       with:
-        java-version: 'latest-ea'
+        java-version: '25'
         distribution: 'graalvm'
         set-java-home: 'false'
     - name: Set BOOTSTRAP_GRAALVM
