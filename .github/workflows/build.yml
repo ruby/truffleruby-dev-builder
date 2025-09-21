@@ -95,8 +95,14 @@ jobs:
         platform=${platform/macos-13/macos-latest}
         platform=${platform/macos-14/macos-13-arm64}
         platform=${platform/%-arm/-arm64}
-        echo "platform=$platform" >> $GITHUB_OUTPUT
+        echo "old_platform=$platform" >> $GITHUB_OUTPUT
 
+        platform=${{ matrix.os }}
+        platform=${platform/macos-13/darwin-x64}
+        platform=${platform/macos-14/darwin-arm64}
+        platform=${platform/%.04/.04-x64}
+        platform=${platform/%.04-arm/.04-arm64}
+        echo "platform=$platform" >> $GITHUB_OUTPUT
     # Build
     - name: Setup system ruby
       uses: ruby/setup-ruby@master
@@ -157,7 +163,12 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
-      run: gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz"
+      run: |
+        gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz"
+        if [ "${{ steps.platform.outputs.old_platform }}" != "${{ steps.platform.outputs.platform }}" ]; then
+          mv "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
+          gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
+        fi
 
   publish:
     name: Publish Release
