@@ -42,44 +42,13 @@ jobs:
           }
         result-encoding: string
 
-  release:
-    name: Create GitHub Release
-    needs: [prepare]
-    if: needs.prepare.outputs.should_build == 'true'
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.tag.outputs.tag }}
-    steps:
-    - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
-      if: github.event_name != 'push'
-
-    - name: Set tag name
-      id: tag
-      run: |
-        if [[ "${{ github.event_name }}" != "push" ]]; then
-          tag=v$(date +%Y%m%d.%H%M%S)
-        else
-          tag=$(basename "${{ github.ref }}")
-        fi
-        echo "tag=$tag" >> $GITHUB_OUTPUT
-    - name: Create Release
-      env:
-        GH_TOKEN: ${{ github.token }}
-        GH_REPO: ${{ github.repository }}
-      run: |
-        tag="${{ steps.tag.outputs.tag }}"
-        body="oracle/truffleruby@${{ needs.prepare.outputs.commit }}"
-        gh release create --draft "$tag" --title "$tag" --notes "$body"
-
   build:
-    needs: [prepare, release]
+    needs: [prepare]
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-22.04, ubuntu-24.04, ubuntu-22.04-arm, ubuntu-24.04-arm, macos-13, macos-14 ]
-        name: [ '-head', '+graalvm-head' ]
+        os: [ macos-14 ]
+        name: [ '+graalvm-head' ]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Clone truffleruby
@@ -154,35 +123,12 @@ jobs:
     - name: Create archive
       run: tar czf truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz -C ~/.rubies truffleruby${{ matrix.name }}
 
+    - name: Setup SSH session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
+
     - name: Basic test
       run: ~/.rubies/truffleruby${{ matrix.name }}/bin/ruby --version
     - name: OpenSSL test
       run: ~/.rubies/truffleruby${{ matrix.name }}/bin/ruby -ropen-uri -e 'puts URI.send(:open, %{https://rubygems.org/}) { |f| f.read(1024) }'
-
-    - name: Upload Built Ruby
-      env:
-        GH_TOKEN: ${{ github.token }}
-        GH_REPO: ${{ github.repository }}
-      run: |
-        gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz"
-        if [ "${{ steps.platform.outputs.old_platform }}" != "${{ steps.platform.outputs.platform }}" ]; then
-          mv "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
-          gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
-        fi
-
-  publish:
-    name: Publish Release
-    needs: [release, build]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Publish Release
-      env:
-        GH_TOKEN: ${{ github.token }}
-        GH_REPO: ${{ github.repository }}
-      run: gh release edit "${{ needs.release.outputs.tag }}" --draft=false
-    - uses: eregon/keep-last-n-releases@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        n: 7
-        remove_tags_without_release: true
