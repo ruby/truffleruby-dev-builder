@@ -166,8 +166,16 @@ jobs:
       run: |
         gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz"
         if [ "${{ steps.platform.outputs.old_platform }}" != "${{ steps.platform.outputs.platform }}" ]; then
-          mv "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
+          cp "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
           gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
+        fi
+        if [ "${{ matrix.os }}" = "ubuntu-22.04" ]; then
+          cp "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz" "truffleruby${{ matrix.name }}-linux-x64.tar.gz"
+          gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-linux-x64.tar.gz"
+        fi
+        if [ "${{ matrix.os }}" = "ubuntu-22.04-arm" ]; then
+          cp "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz" "truffleruby${{ matrix.name }}-linux-arm64.tar.gz"
+          gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-linux-arm64.tar.gz"
         fi
 
   publish:
