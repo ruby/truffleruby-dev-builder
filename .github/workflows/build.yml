@@ -17,7 +17,7 @@ jobs:
     - name: Clone truffleruby
       uses: actions/checkout@v5
       with:
-        repository: oracle/truffleruby
+        repository: truffleruby/truffleruby
         path: truffleruby
     - name: Set latest_commit
       id: latest_commit
@@ -70,7 +70,7 @@ jobs:
         GH_REPO: ${{ github.repository }}
       run: |
         tag="${{ steps.tag.outputs.tag }}"
-        body="oracle/truffleruby@${{ needs.prepare.outputs.commit }}"
+        body="truffleruby/truffleruby@${{ needs.prepare.outputs.commit }}"
         gh release create --draft "$tag" --title "$tag" --notes "$body"
 
   build:
@@ -85,7 +85,7 @@ jobs:
     - name: Clone truffleruby
       uses: actions/checkout@v5
       with:
-        repository: oracle/truffleruby
+        repository: truffleruby/truffleruby
         ref: ${{ needs.prepare.outputs.commit }}
 
     - name: Set platform
