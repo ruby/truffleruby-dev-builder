@@ -193,4 +193,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         n: 7
-        remove_tags_without_release: true
+        remove_tags_without_release: false
