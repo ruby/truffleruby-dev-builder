@@ -92,12 +92,6 @@ jobs:
       id: platform
       run: |
         platform=${{ matrix.os }}
-        platform=${platform/macos-13/macos-latest}
-        platform=${platform/macos-14/macos-13-arm64}
-        platform=${platform/%-arm/-arm64}
-        echo "old_platform=$platform" >> $GITHUB_OUTPUT
-
-        platform=${{ matrix.os }}
         platform=${platform/macos-13/darwin-x64}
         platform=${platform/macos-14/darwin-arm64}
         platform=${platform/%.04/.04-x64}
@@ -165,10 +159,6 @@ jobs:
         GH_REPO: ${{ github.repository }}
       run: |
         gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz"
-        if [ "${{ steps.platform.outputs.old_platform }}" != "${{ steps.platform.outputs.platform }}" ]; then
-          cp "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
-          gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.old_platform }}.tar.gz"
-        fi
         if [ "${{ matrix.os }}" = "ubuntu-22.04" ]; then
           cp "truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz" "truffleruby${{ matrix.name }}-linux-x64.tar.gz"
           gh release upload "${{ needs.release.outputs.tag }}" "truffleruby${{ matrix.name }}-linux-x64.tar.gz"
