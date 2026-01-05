@@ -131,10 +131,8 @@ jobs:
     - name: Install mx
       run: jt mx --version
 
-    - run: free -m
-      if: startsWith(matrix.os, 'ubuntu')
     - name: Build TruffleRuby (native)
-      run: jt build --env native --extra-image-builder-argument=rubyvm:-J-XX:MaxRAMPercentage=100
+      run: jt build --env native
       if: matrix.name == '-head'
     - name: Build TruffleRuby (jvm)
       run: jt build --env jvm-ce
