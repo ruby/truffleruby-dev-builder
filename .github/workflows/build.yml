@@ -5,7 +5,7 @@ on:
     tags:
     - '*'
   schedule:
-  - cron: '0 8 * * *'
+  - cron: '0 6 * * *'
 jobs:
   prepare:
     name: Check if the latest truffleruby commit is already built
