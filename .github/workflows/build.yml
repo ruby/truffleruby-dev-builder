@@ -122,18 +122,11 @@ jobs:
     - name: Install mx
       run: jt mx --version
 
-    - name: Build TruffleRuby (native)
-      run: jt build --env native-ee
-      if: matrix.name == '-head'
-    - name: Build TruffleRuby (jvm)
-      run: jt build --env jvm-ee
-      if: matrix.name == '+graalvm-head'
+    - name: Build TruffleRuby
+      run: jt build --env ${{ matrix.name == '-head' && 'native-ee' || 'jvm-ee' }}
 
     - run: mkdir -p ~/.rubies
-    - run: mv $(jt -u native-ee ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
-      if: matrix.name == '-head'
-    - run: mv $(jt -u jvm-ee ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
-      if: matrix.name == '+graalvm-head'
+    - run: mv $(jt -u ${{ matrix.name == '-head' && 'native-ee' || 'jvm-ee' }} ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
     - name: Create archive
       run: tar czf truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz -C ~/.rubies truffleruby${{ matrix.name }}
 
