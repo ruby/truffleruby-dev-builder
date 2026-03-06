@@ -111,15 +111,6 @@ jobs:
     - run: sudo apt-get install -y --no-install-recommends libyaml-dev
       if: startsWith(matrix.os, 'ubuntu')
 
-    - name: Download Oracle GraalVM
-      uses: graalvm/setup-graalvm@v1
-      with:
-        java-version: '25'
-        distribution: 'graalvm'
-        set-java-home: 'false'
-    - name: Set BOOTSTRAP_GRAALVM
-      run: echo "BOOTSTRAP_GRAALVM=$GRAALVM_HOME" >> $GITHUB_ENV
-
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
     - name: Clone Graal
@@ -132,16 +123,16 @@ jobs:
       run: jt mx --version
 
     - name: Build TruffleRuby (native)
-      run: jt build --env native
+      run: jt build --env native-ee
       if: matrix.name == '-head'
     - name: Build TruffleRuby (jvm)
-      run: jt build --env jvm-ce
+      run: jt build --env jvm-ee
       if: matrix.name == '+graalvm-head'
 
     - run: mkdir -p ~/.rubies
-    - run: mv $(jt -u native ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
+    - run: mv $(jt -u native-ee ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
       if: matrix.name == '-head'
-    - run: mv $(jt -u jvm-ce ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
+    - run: mv $(jt -u jvm-ee ruby-home) ~/.rubies/truffleruby${{ matrix.name }}
       if: matrix.name == '+graalvm-head'
     - name: Create archive
       run: tar czf truffleruby${{ matrix.name }}-${{ steps.platform.outputs.platform }}.tar.gz -C ~/.rubies truffleruby${{ matrix.name }}
