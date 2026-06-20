@@ -97,10 +97,10 @@ jobs:
         platform=${platform/%.04-arm/.04-arm64}
         echo "platform=$platform" >> $GITHUB_OUTPUT
     # Build
-    # - name: Setup system ruby
-    #   uses: ruby/setup-ruby@master
-    #   with:
-    #     ruby-version: 3.2
+    - name: Setup system ruby
+      uses: ruby/setup-ruby@master
+      with:
+        ruby-version: 3.2
     - name: Setup system python
       uses: actions/setup-python@v6
       with:
